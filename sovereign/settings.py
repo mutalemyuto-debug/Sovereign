@@ -26,7 +26,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
 'whitenoisemiddlewareWhiteNoiseMiddleware',   
- 'djangocontribsessionsmiddlewareSessionMiddleware',
+ "django.contrib.sessions.middleware.SessionMiddleware",
 
 ]
 
