@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}Journal | Sovereign{% endblock %}
+{% block content %}<div class="form-page"><a class="back-link" href="{% url 'dashboard' %}">← Back to overview</a><p class="eyebrow accent">REFLECTION</p><h1>Make space to think.</h1><p class="muted">Capture the moment honestly. Clarity compounds.</p><form method="post" class="stack-form form-card">{% csrf_token %}{{ form.as_p }}<div class="form-actions"><a class="button secondary" href="{% url 'dashboard' %}">Cancel</a><button class="button primary" type="submit">Save reflection</button></div></form></div>{% endblock %}

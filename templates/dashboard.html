@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Overview | Sovereign{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">{{ today|date:'l, F j' }}</p><h1>Good to see you, {{ user.first_name|default:user.username }}.</h1></div><a class="avatar-link" href="{% url 'profile' %}">{% if profile.profile_picture %}<img src="{{ profile.profile_picture.url }}" alt="Profile picture">{% else %}<span>{{ user.username|first|upper }}</span>{% endif %}</a></header>
+<section class="hero-panel"><div><p class="eyebrow accent">YOUR DAILY PRACTICE</p><h2>Build a life you<br><em>respect.</em></h2><p class="hero-copy">Small actions, repeated with intention, become an identity.</p></div><div class="hero-orbit"><span></span><strong>01</strong><small>DAY<br>BY DAY</small></div></section>
+<div class="dashboard-grid">
+    <section class="content-column" id="habits">
+        <div class="section-heading"><div><p class="eyebrow">THE FOUNDATION</p><h2>Today's habits</h2></div><button class="text-button" data-open-modal="habit-modal">+ Add habit</button></div>
+        <div class="habit-list">
+            {% for habit in habits %}<article class="habit-row{% if habit.today_log.completed %} is-complete{% endif %}" data-habit-id="{{ habit.id }}"><button class="habit-check" data-habit-toggle="{% url 'toggle_habit' habit.id %}" aria-label="Toggle {{ habit.name }}"><span>✓</span></button><div class="habit-info"><strong>{{ habit.name }}</strong><small>{{ habit.get_frequency_display }} · target {{ habit.target_count }}</small></div><div class="habit-status">{% if habit.today_log.completed %}Complete{% else %}In progress{% endif %}</div></article>{% empty %}<div class="empty-state"><span>✦</span><p>Your first habit is waiting.</p><button class="text-button" data-open-modal="habit-modal">Create one</button></div>{% endfor %}
+        </div>
+        <div class="section-heading journal-heading"><div><p class="eyebrow">REFLECTION</p><h2>Recent journal</h2></div><a class="text-button" href="{% url 'create_journal' %}">View all →</a></div>
+        <div class="journal-list">{% for entry in recent_entries %}<article class="journal-card"><div class="journal-meta"><span>{{ entry.created_at|date:'M j, Y' }}</span><span class="mood-dot mood-{{ entry.mood }}"></span></div><h3>{{ entry.title }}</h3><p>{{ entry.body|truncatewords:24 }}</p></article>{% empty %}<div class="empty-state compact"><p>No reflections yet. Write down what is on your mind.</p><a class="text-button" href="{% url 'create_journal' %}">Start writing</a></div>{% endfor %}</div>
+    </section>
+    <aside class="right-column">
+        <section class="timer-card"><div class="section-heading"><div><p class="eyebrow accent">DEEP WORK</p><h2>Focus timer</h2></div><span class="timer-mode">FOCUS</span></div><div class="timer-display" data-timer-display>25:00</div><div class="timer-progress"><span data-timer-progress></span></div><div class="timer-controls"><button class="timer-button secondary" data-timer-reset aria-label="Reset timer">↺</button><button class="timer-button primary" data-timer-toggle>Start focus</button><button class="timer-button secondary" data-timer-skip aria-label="Skip timer">→</button></div><p class="timer-note">Your attention is your most valuable asset.</p></section>
+        <section class="mantra-card"><span class="quote-mark">“</span><p>{{ profile.bio|default:'Discipline is choosing between what you want now and what you want most.' }}</p><small>YOUR PERSONAL MANTRA</small></section>
+    </aside>
+</div>
+<div class="modal" id="habit-modal" aria-hidden="true"><div class="modal-panel"><button class="modal-close" data-close-modal aria-label="Close">×</button><p class="eyebrow accent">THE FOUNDATION</p><h2>Add a habit</h2><form method="post" action="{% url 'create_habit' %}" class="stack-form">{% csrf_token %}{{ habit_form.as_p }}<button class="button primary" type="submit">Add habit</button></form></div></div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/app.js' %}"></script>{% endblock %}

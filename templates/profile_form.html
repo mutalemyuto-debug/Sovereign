@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}Profile | Sovereign{% endblock %}
+{% block content %}<div class="form-page"><a class="back-link" href="{% url 'dashboard' %}">← Back to overview</a><p class="eyebrow accent">YOUR IDENTITY</p><h1>Shape your space.</h1><p class="muted">Your mantra will appear on your dashboard.</p><form method="post" enctype="multipart/form-data" class="stack-form form-card">{% csrf_token %}{{ form.as_p }}<div class="form-actions"><a class="button secondary" href="{% url 'dashboard' %}">Cancel</a><button class="button primary" type="submit">Save profile</button></div></form></div>{% endblock %}

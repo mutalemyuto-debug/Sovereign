@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Sovereign{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+    <aside class="sidebar">
+        <a class="brand" href="{% url 'dashboard' %}"><span class="brand-mark">S</span><span>Sovereign</span></a>
+        <nav class="nav-links" aria-label="Main navigation">
+            <a class="nav-link active" href="{% url 'dashboard' %}"><span>⌂</span>Overview</a>
+            <a class="nav-link" href="{% url 'dashboard' %}#habits"><span>✓</span>Habits</a>
+            <a class="nav-link" href="{% url 'create_journal' %}"><span>◈</span>Journal</a>
+            <a class="nav-link" href="{% url 'profile' %}"><span>◉</span>Profile</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="mini-avatar">{{ user.username|first|upper }}</div>
+            <div><strong>{{ user.username }}</strong><small>Keep showing up.</small></div>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="icon-button" title="Log out" aria-label="Log out">↗</button></form>
+        </div>
+    </aside>
+{% endif %}
+<main class="page-shell{% if not user.is_authenticated %} page-shell-public{% endif %}">
+    {% for message in messages %}<div class="flash-message">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

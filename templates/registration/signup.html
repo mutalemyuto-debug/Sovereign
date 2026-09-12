@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}Join Sovereign{% endblock %}
+{% block content %}<section class="auth-panel"><a class="brand" href="{% url 'signup' %}"><span class="brand-mark">S</span><span>Sovereign</span></a><p class="eyebrow accent">BEGIN THE PRACTICE</p><h1>Become your own standard.</h1><p class="muted">A quiet space for the habits and reflections that shape you.</p><form method="post" class="stack-form">{% csrf_token %}{{ form.as_p }}<button class="button primary" type="submit">Create account</button></form><p class="auth-footer">Already a member? <a href="{% url 'login' %}">Sign in</a></p></section>{% endblock %}
