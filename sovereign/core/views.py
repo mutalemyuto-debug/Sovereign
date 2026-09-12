@@ -2,13 +2,16 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from calendar import monthrange
+from datetime import date, datetime, timedelta
+
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import HabitForm, JournalEntryForm, ProfileForm, SignupForm
-from .models import Habit, HabitLog, JournalEntry, Profile
+from .forms import HabitForm, JournalEntryForm, ProfileForm, SignupForm, TodoForm
+from .models import FocusSession, Habit, HabitLog, JournalEntry, Profile, Todo
 
 
 def signup_view(request):
@@ -46,12 +49,56 @@ def dashboard(request):
     today = timezone.localdate()
     profile, _ = Profile.objects.get_or_create(user=request.user)
     habits = list(Habit.objects.filter(user=request.user))
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    week_dates = [week_start + timedelta(days=index) for index in range(7)]
+    history_start = week_start - timedelta(days=35)
+    history_logs = {
+        (log.habit_id, log.date): log.completed
+        for log in HabitLog.objects.filter(
+            habit__in=habits, date__gte=history_start, date__lte=week_dates[-1]
+        )
+    }
     today_logs = {
         log.habit_id: log
         for log in HabitLog.objects.filter(habit__in=habits, date=today)
     }
     for habit in habits:
         habit.today_log = today_logs.get(habit.id)
+    habit_weeks = []
+    for week_offset in range(5, -1, -1):
+        start = week_start - timedelta(days=week_offset * 7)
+        dates = [start + timedelta(days=index) for index in range(7)]
+        habit_weeks.append({"dates": dates, "number": start.isocalendar().week, "is_current": start == week_start})
+    habit_grid = [
+        {
+            "habit": habit,
+            "weeks": [
+                {
+                    "dates": week["dates"],
+                    "cells": [
+                        history_logs.get((habit.id, day), False)
+                        for day in week["dates"]
+                    ],
+                }
+                for week in habit_weeks
+            ],
+        }
+        for habit in habits
+    ]
+    habit_week_grids = [
+        {
+            "dates": week["dates"],
+            "is_current": week["is_current"],
+            "rows": [
+                {
+                    "habit": habit,
+                    "cells": [history_logs.get((habit.id, day), False) for day in week["dates"]],
+                }
+                for habit in habits
+            ],
+        }
+        for week in habit_weeks
+    ]
 
     context = {
         "profile": profile,
@@ -60,6 +107,12 @@ def dashboard(request):
         "habit_form": HabitForm(),
         "journal_form": JournalEntryForm(),
         "today": today,
+        "week_dates": week_dates,
+        "habit_weeks": habit_weeks,
+        "history_logs": history_logs,
+        "habit_grid": habit_grid,
+        "habit_week_grids": habit_week_grids,
+        "has_habit_history": len(habit_week_grids) > 1,
     }
     return render(request, "dashboard.html", context)
 
@@ -84,6 +137,90 @@ def create_habit(request):
         habit.save()
         messages.success(request, "Habit added.")
     return redirect("dashboard")
+
+
+@login_required
+def calendar_view(request):
+    today = timezone.localdate()
+    try:
+        selected = datetime.strptime(request.GET.get("month", ""), "%Y-%m").date().replace(day=1)
+    except ValueError:
+        selected = today.replace(day=1)
+    previous_month = (selected - timedelta(days=1)).replace(day=1)
+    next_month = (selected + timedelta(days=monthrange(selected.year, selected.month)[1])).replace(day=1)
+    first_day = selected - timedelta(days=(selected.weekday() + 1) % 7)
+    calendar_days = [first_day + timedelta(days=index) for index in range(42)]
+    todos = Todo.objects.filter(user=request.user, due_date__gte=calendar_days[0], due_date__lte=calendar_days[-1])
+    todos_by_date = {}
+    for todo in todos:
+        todos_by_date.setdefault(todo.due_date, []).append(todo)
+    calendar_cells = [
+        {"day": day, "todos": todos_by_date.get(day, [])}
+        for day in calendar_days
+    ]
+    return render(request, "calendar.html", {
+        "selected_month": selected,
+        "calendar_days": calendar_days,
+        "calendar_cells": calendar_cells,
+        "upcoming_todos": [todo for todo in todos if not todo.completed],
+        "previous_month": previous_month,
+        "next_month": next_month,
+        "today": today,
+        "todo_form": TodoForm(initial={"due_date": today}),
+    })
+
+
+@login_required
+@require_POST
+def create_todo(request):
+    form = TodoForm(request.POST)
+    if form.is_valid():
+        todo = form.save(commit=False)
+        todo.user = request.user
+        todo.save()
+        messages.success(request, "Todo added.")
+    return redirect(f"/calendar/?month={request.POST.get('due_date', '')[:7]}")
+
+
+@login_required
+@require_POST
+def toggle_todo(request, todo_id):
+    todo = get_object_or_404(Todo, id=todo_id, user=request.user)
+    todo.completed = not todo.completed
+    todo.save(update_fields=["completed"])
+    return JsonResponse({"completed": todo.completed, "todo_id": todo.id})
+
+
+@login_required
+def focus_view(request):
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    sessions = FocusSession.objects.filter(user=request.user, date__gte=month_start, date__lte=today)
+    daily_sessions = {}
+    for session in sessions:
+        daily_sessions.setdefault(session.date, []).append(session)
+    return render(request, "focus.html", {
+        "profile": Profile.objects.get_or_create(user=request.user)[0],
+        "today": today,
+        "today_sessions": daily_sessions.get(today, []),
+        "today_minutes": sum(session.duration_minutes for session in daily_sessions.get(today, [])),
+        "month_sessions": sessions,
+        "month_minutes": sum(session.duration_minutes for session in sessions),
+        "month_blocks": sessions.count(),
+        "daily_sessions": daily_sessions,
+    })
+
+
+@login_required
+@require_POST
+def complete_focus_session(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    FocusSession.objects.create(
+        user=request.user,
+        date=timezone.localdate(),
+        duration_minutes=profile.focus_duration,
+    )
+    return JsonResponse({"blocks": FocusSession.objects.filter(user=request.user, date=timezone.localdate()).count()})
 
 
 @login_required

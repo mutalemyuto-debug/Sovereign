@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Habit, JournalEntry, Profile
+from .models import Habit, JournalEntry, Profile, Todo
 
 
 class SignupForm(UserCreationForm):
@@ -16,9 +16,10 @@ class SignupForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ("bio", "profile_picture")
+        fields = ("bio", "profile_picture", "focus_duration")
         widgets = {
             "bio": forms.Textarea(attrs={"rows": 4}),
+            "focus_duration": forms.NumberInput(attrs={"min": 5, "max": 120}),
         }
 
 
@@ -35,4 +36,13 @@ class JournalEntryForm(forms.ModelForm):
         widgets = {
             "body": forms.Textarea(attrs={"rows": 8}),
             "mood": forms.NumberInput(attrs={"min": 1, "max": 5}),
+        }
+
+
+class TodoForm(forms.ModelForm):
+    class Meta:
+        model = Todo
+        fields = ("title", "due_date")
+        widgets = {
+            "due_date": forms.DateInput(attrs={"type": "date"}),
         }

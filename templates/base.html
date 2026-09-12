@@ -14,15 +14,20 @@
 <body>
 {% if user.is_authenticated %}
     <aside class="sidebar">
-        <a class="brand" href="{% url 'dashboard' %}"><span class="brand-mark">S</span><span>Sovereign</span></a>
+        <a class="brand" href="{% url 'dashboard' %}" target="_self"><span class="brand-mark">S</span><span>Sovereign</span></a>
         <nav class="nav-links" aria-label="Main navigation">
-            <a class="nav-link active" href="{% url 'dashboard' %}"><span>⌂</span>Overview</a>
-            <a class="nav-link" href="{% url 'dashboard' %}#habits"><span>✓</span>Habits</a>
-            <a class="nav-link" href="{% url 'create_journal' %}"><span>◈</span>Journal</a>
-            <a class="nav-link" href="{% url 'profile' %}"><span>◉</span>Profile</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'dashboard' %}" target="_self"><span>⌂</span>Overview</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'calendar' %} active{% endif %}" href="{% url 'calendar' %}" target="_self"><span>▦</span>Calendar</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'focus' %} active{% endif %}" href="{% url 'focus' %}" target="_self"><span>◷</span>Full Focus</a>
+            <details class="nav-dropdown">
+                <summary><span class="nav-summary-icon">•••</span><span>More</span></summary>
+                <div class="nav-dropdown-menu">
+                    <a class="nav-link{% if request.resolver_match.url_name == 'create_journal' %} active{% endif %}" href="{% url 'create_journal' %}" target="_self"><span>◈</span>Journal</a>
+                </div>
+            </details>
+            <a class="avatar-link" href="{% url 'profile' %}" target="_self" title="Open profile" aria-label="Open profile">{% if user.profile.profile_picture %}<img src="{{ user.profile.profile_picture.url }}" alt="Profile picture">{% else %}<span>{{ user.username|first|upper }}</span>{% endif %}</a>
         </nav>
         <div class="sidebar-footer">
-            <div class="mini-avatar">{{ user.username|first|upper }}</div>
             <div><strong>{{ user.username }}</strong><small>Keep showing up.</small></div>
             <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="icon-button" title="Log out" aria-label="Log out">↗</button></form>
         </div>
@@ -33,5 +38,6 @@
     {% block content %}{% endblock %}
 </main>
 {% block scripts %}{% endblock %}
+<script src="{% static 'js/app.js' %}"></script>
 </body>
 </html>

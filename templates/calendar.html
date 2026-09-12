@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Calendar | Sovereign{% endblock %}
+{% block content %}
+<header class="page-heading"><div><p class="eyebrow accent">YOUR DAYS, IN VIEW</p><h1>Calendar</h1><p class="muted">Give today a clear shape, then make room for what is next.</p></div><button class="button primary" data-open-modal="todo-modal">+ Add todo</button></header>
+<section class="calendar-layout">
+    <div class="calendar-card">
+        <div class="calendar-toolbar"><a class="round-button" href="?month={{ previous_month|date:'Y-m' }}" aria-label="Previous month">←</a><h2>{{ selected_month|date:'F Y' }}</h2><a class="round-button" href="?month={{ next_month|date:'Y-m' }}" aria-label="Next month">→</a></div>
+        <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+        <div class="calendar-grid">{% for cell in calendar_cells %}<div class="calendar-day{% if cell.day.month != selected_month.month %} is-muted{% endif %}{% if cell.day == today %} is-today{% endif %}"><time>{{ cell.day.day }}</time>{% for todo in cell.todos %}<button class="calendar-todo{% if todo.completed %} is-done{% endif %}" data-todo-toggle="{% url 'toggle_todo' todo.id %}">{{ todo.title }}</button>{% endfor %}</div>{% endfor %}</div>
+    </div>
+    <aside class="upcoming-panel"><p class="eyebrow">UP NEXT</p><h2>Upcoming todos</h2>{% for todo in upcoming_todos %}<div class="upcoming-todo"><time>{{ todo.due_date|date:'D, M j' }}</time><strong>{{ todo.title }}</strong></div>{% empty %}<p class="muted">Your upcoming list is clear.</p>{% endfor %}</aside>
+</section>
+<div class="modal" id="todo-modal" aria-hidden="true"><div class="modal-panel"><button class="modal-close" data-close-modal aria-label="Close">×</button><p class="eyebrow accent">MAKE IT REAL</p><h2>Add a todo</h2><form method="post" action="{% url 'create_todo' %}" class="stack-form">{% csrf_token %}{{ todo_form.as_p }}<button class="button primary" type="submit">Add to calendar</button></form></div></div>
+{% endblock %}
+{% block scripts %}{% endblock %}

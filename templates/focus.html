@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Full Focus | Sovereign{% endblock %}
+{% block content %}
+<header class="page-heading"><div><p class="eyebrow accent">DEEP WORK</p><h1>Full Focus</h1><p class="muted">One block at a time. Let the day add up.</p></div><a class="button secondary" href="{% url 'profile' %}">Set duration</a></header>
+<section class="focus-layout">
+    <div class="focus-console" data-focus-duration="{{ profile.focus_duration }}" data-focus-complete-url="{% url 'complete_focus_session' %}"><div class="focus-ring"><div><span data-focus-display>{{ profile.focus_duration }}:00</span><small>MINUTES</small></div></div><p class="focus-state" data-focus-state>Ready when you are.</p><div class="focus-progress"><span data-focus-progress></span></div><div class="focus-controls"><button class="round-button" data-focus-reset aria-label="Reset timer">↺</button><button class="button primary focus-start" data-focus-toggle>Start focus</button><button class="round-button" data-focus-skip aria-label="Skip to five minutes">5</button></div><p class="timer-note">Your attention is your most valuable asset.</p></div>
+    <aside class="focus-stats"><div class="stat-block"><span class="eyebrow">TODAY</span><strong data-focus-blocks>{{ today_sessions|length }}</strong><small>completed blocks</small><p>{{ today_minutes }} minutes of deliberate work</p></div><div class="stat-block"><span class="eyebrow">THIS MONTH</span><strong>{{ month_blocks }}</strong><small>focus blocks</small><p>{{ month_minutes }} total minutes</p></div><div class="focus-history"><div class="section-heading"><h2>Daily rhythm</h2><span class="muted">{{ today|date:'F Y' }}</span></div>{% for day, sessions in daily_sessions.items %}<div class="focus-day"><time>{{ day|date:'M j' }}</time><span>{% for session in sessions %}<i></i>{% endfor %}</span><strong>{{ sessions|length }}</strong></div>{% empty %}<p class="muted">Complete your first block to begin the record.</p>{% endfor %}</div></aside>
+</section>
+{% endblock %}
+{% block scripts %}{% endblock %}

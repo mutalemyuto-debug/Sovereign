@@ -9,6 +9,9 @@ class Profile(models.Model):
     profile_picture = models.ImageField(
         upload_to="profile_pictures/", blank=True, null=True
     )
+    focus_duration = models.PositiveSmallIntegerField(
+        default=25, validators=[MinValueValidator(5), MaxValueValidator(120)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -68,6 +71,33 @@ class JournalEntry(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Todo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="todos")
+    title = models.CharField(max_length=180)
+    due_date = models.DateField()
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["completed", "due_date", "created_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class FocusSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="focus_sessions")
+    date = models.DateField()
+    duration_minutes = models.PositiveSmallIntegerField()
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-completed_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date} ({self.duration_minutes} min)"
 
 
 class Goal(models.Model):
