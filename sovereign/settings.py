@@ -24,6 +24,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+'whitenoisemiddlewareWhiteNoiseMiddleware',   
+ 'djangocontribsessionsmiddlewareSessionMiddleware',
+
 ]
 
 ROOT_URLCONF = "sovereign.urls"
