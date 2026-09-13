@@ -4,10 +4,7 @@ import os
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env", override=True)
-SECRET_KEY = "django-insecure-change-this-before-production"
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+load_dotenv(BASE_DIR / ".env", override=True)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
