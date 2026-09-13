@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}{{ entry.title }} | Sovereign{% endblock %}
+{% block content %}
+<div class="form-page journal-detail-page">
+    <a class="back-link" href="{% url 'dashboard' %}">← Back to overview</a>
+    <p class="eyebrow accent">REFLECTION</p>
+    <div class="journal-detail-meta"><span>{{ entry.created_at|date:'F j, Y · g:i A' }}</span><span class="mood-dot mood-{{ entry.mood }}"></span></div>
+    <h1>{{ entry.title }}</h1>
+    <div class="journal-detail-body">{{ entry.body|linebreaks }}</div>
+</div>
+{% endblock %}

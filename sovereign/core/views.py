@@ -243,6 +243,12 @@ def create_journal_entry(request):
 
 
 @login_required
+def journal_detail(request, entry_id):
+    entry = get_object_or_404(JournalEntry, id=entry_id, user=request.user)
+    return render(request, "journal_detail.html", {"entry": entry})
+
+
+@login_required
 def update_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     form = ProfileForm(request.POST or None, request.FILES or None, instance=profile)

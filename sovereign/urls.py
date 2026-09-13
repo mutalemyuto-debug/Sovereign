@@ -22,6 +22,7 @@ urlpatterns = [
     path("assistant/chat/", views.assistant_chat, name="assistant_chat"),
     path("assistant/history/", views.assistant_history, name="assistant_history"),
     path("journal/new/", views.create_journal_entry, name="create_journal"),
+    path("journal/<int:entry_id>/", views.journal_detail, name="journal_detail"),
     path("profile/", views.update_profile, name="profile"),
 ]
 
