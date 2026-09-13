@@ -60,4 +60,6 @@ For Render, use these settings:
 
 The `collectstatic` step is required so WhiteNoise can serve `static/css/styles.css` and the other files in `static/` in production.
 
+Profile pictures are served from `/media/`. On hosts with ephemeral storage, configure a persistent disk or object storage for `MEDIA_ROOT`; otherwise uploaded pictures can disappear after a redeploy.
+
 The default SQLite database is intended for local development. Deployment filesystems are commonly replaced during builds or restarts, so use a managed PostgreSQL database for production. Existing SQLite data must be exported and imported into that database; setting `DATABASE_URL` does not automatically copy local records.
