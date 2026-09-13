@@ -5,7 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -253,10 +253,31 @@ def update_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     form = ProfileForm(request.POST or None, request.FILES or None, instance=profile)
     if request.method == "POST" and form.is_valid():
+        uploaded_picture = request.FILES.get("profile_picture")
+        uploaded_picture_data = uploaded_picture.read() if uploaded_picture else None
         form.save()
+        if uploaded_picture:
+            profile.profile_picture_data = uploaded_picture_data
+            profile.profile_picture_content_type = uploaded_picture.content_type or "image/jpeg"
+            profile.save(update_fields=["profile_picture_data", "profile_picture_content_type"])
         messages.success(request, "Profile updated.")
         return redirect("dashboard")
     return render(request, "profile_form.html", {"form": form, "profile": profile})
+
+
+@login_required
+def profile_picture(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if profile.profile_picture_data:
+        response = HttpResponse(
+            bytes(profile.profile_picture_data),
+            content_type=profile.profile_picture_content_type or "image/jpeg",
+        )
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+    if profile.profile_picture and profile.profile_picture.storage.exists(profile.profile_picture.name):
+        return redirect(profile.profile_picture.url)
+    return HttpResponse(status=404)
 
 
 @login_required

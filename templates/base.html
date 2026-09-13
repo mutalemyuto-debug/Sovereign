@@ -25,7 +25,7 @@
                     <a class="nav-link{% if request.resolver_match.url_name == 'create_journal' %} active{% endif %}" href="{% url 'create_journal' %}" target="_self"><span>◈</span>Journal</a>
                 </div>
             </details>
-            <a class="avatar-link" href="{% url 'profile' %}" target="_self" title="Open profile" aria-label="Open profile">{% if user.profile.profile_picture %}<img src="{{ user.profile.profile_picture.url }}" alt="Profile picture">{% else %}<span>{{ user.username|first|upper }}</span>{% endif %}</a>
+            <a class="avatar-link" href="{% url 'profile' %}" target="_self" title="Open profile" aria-label="Open profile">{% if user.profile.profile_picture_data %}<img src="{% url 'profile_picture' %}" alt="Profile picture">{% else %}<span>{{ user.username|first|upper }}</span>{% endif %}</a>
         </nav>
         <div class="sidebar-footer">
             <div><strong>{{ user.username }}</strong><small>Keep showing up.</small></div>

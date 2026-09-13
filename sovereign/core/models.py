@@ -9,6 +9,8 @@ class Profile(models.Model):
     profile_picture = models.ImageField(
         upload_to="profile_pictures/", blank=True, null=True
     )
+    profile_picture_data = models.BinaryField(blank=True, null=True)
+    profile_picture_content_type = models.CharField(max_length=100, blank=True)
     focus_duration = models.PositiveSmallIntegerField(
         default=25, validators=[MinValueValidator(5), MaxValueValidator(120)]
     )
