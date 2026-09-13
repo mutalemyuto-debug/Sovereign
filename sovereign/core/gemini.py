@@ -82,6 +82,8 @@ Return ONLY valid JSON with this shape. Set action to null unless the user clear
 For a create_todo action, use only: type, title, and due_date. The due_date must be YYYY-MM-DD.
 For a create_habit action, use only: type, name, frequency, and target_count. Frequency must be daily or weekly.
 For a create_journal action, use only: type, title, body, and mood. Mood must be an integer from 1 to 5.
+For a set_focus_duration action, use only: type and duration_minutes. duration_minutes must be an integer from 5 to 120.
+When the user asks to journal or save a reflection, create a concise descriptive title if they do not provide one.
 Do not invent a due date; use today's date only when the user says today. Keep replies short, practical, and supportive."""
     try:
         client = genai.Client(api_key=settings.GEMINI_API_KEY)

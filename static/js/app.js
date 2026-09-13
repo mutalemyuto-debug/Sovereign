@@ -28,6 +28,20 @@
         const form = assistant.querySelector('[data-assistant-form]');
         const messages = assistant.querySelector('[data-assistant-messages]');
         let conversationId = null;
+        fetch(assistant.dataset.assistantHistoryUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then((response) => response.ok ? response.json() : null)
+            .then((data) => {
+                if (!data?.conversation_id) return;
+                conversationId = data.conversation_id;
+                messages.innerHTML = '';
+                data.messages.forEach((item) => {
+                    const bubble = document.createElement('div');
+                    bubble.className = `assistant-message assistant-message-${item.role === 'user' ? 'user' : 'bot'}`;
+                    bubble.textContent = item.content;
+                    messages.appendChild(bubble);
+                });
+            })
+            .catch(() => {});
         toggles.forEach((toggle) => toggle.addEventListener('click', () => {
             const isOpening = panel.hidden;
             panel.hidden = !isOpening;
@@ -106,6 +120,7 @@
                 if (!response.ok) throw new Error('Habit update failed');
                 const data = await response.json();
                 row.classList.toggle('is-complete', Boolean(data.completed));
+                button.classList.toggle('is-complete', Boolean(data.completed));
                 button.setAttribute('aria-pressed', String(Boolean(data.completed)));
                 button.setAttribute('aria-label', `${data.completed ? 'Unmark' : 'Mark'} ${row.dataset.habitName} as complete`);
                 if (status) status.textContent = data.completed ? 'Complete' : 'In progress';

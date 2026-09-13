@@ -282,7 +282,22 @@ def assistant_chat(request):
     ChatMessage.objects.create(
         conversation=conversation, role=ChatMessage.Role.ASSISTANT, content=reply
     )
+    if conversation.title == "Sovereign assistant":
+        conversation.title = message[:120]
+        conversation.save(update_fields=["title", "updated_at"])
     return JsonResponse({"conversation_id": conversation.id, "reply": reply})
+
+
+@login_required
+def assistant_history(request):
+    conversation = Conversation.objects.filter(user=request.user).first()
+    if conversation is None:
+        return JsonResponse({"conversation_id": None, "messages": []})
+    return JsonResponse({
+        "conversation_id": conversation.id,
+        "title": conversation.title,
+        "messages": list(conversation.messages.values("role", "content")),
+    })
 
 
 def apply_assistant_action(user, action):
@@ -324,4 +339,13 @@ def apply_assistant_action(user, action):
         if body:
             JournalEntry.objects.create(user=user, title=title or "Reflection", body=body, mood=mood)
             return "Saved that reflection to your journal."
+    elif action_type == "set_focus_duration":
+        try:
+            duration = max(5, min(int(action.get("duration_minutes")), 120))
+        except (TypeError, ValueError):
+            return "I need a focus duration between 5 and 120 minutes."
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.focus_duration = duration
+        profile.save(update_fields=["focus_duration"])
+        return f"Set your deep work timer to {duration} minutes."
     return ""

@@ -38,7 +38,7 @@
     {% block content %}{% endblock %}
 </main>
 {% if user.is_authenticated %}
-<aside class="assistant-widget" data-assistant-widget>
+<aside class="assistant-widget" data-assistant-widget data-assistant-history-url="{% url 'assistant_history' %}">
     <button class="assistant-launcher" type="button" data-assistant-toggle aria-expanded="false" aria-controls="assistant-panel"><span class="assistant-spark">✦</span><span>Sovereign guide</span></button>
     <section class="assistant-panel" id="assistant-panel" aria-label="Sovereign guide" hidden>
         <header class="assistant-header"><div><p class="eyebrow accent">YOUR GUIDE</p><h2>Sovereign assistant</h2></div><button class="assistant-close" type="button" data-assistant-toggle aria-label="Close assistant">×</button></header>
