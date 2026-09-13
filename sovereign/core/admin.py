@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import FocusSession, Goal, Habit, HabitLog, JournalEntry, Profile, Todo
+from .models import ChatMessage, Conversation, FocusSession, Goal, Habit, HabitLog, JournalEntry, Profile, Todo
 
 
-admin.site.register([Profile, Habit, HabitLog, JournalEntry, Goal, Todo, FocusSession])
+admin.site.register([Profile, Habit, HabitLog, JournalEntry, Goal, Todo, FocusSession, Conversation, ChatMessage])

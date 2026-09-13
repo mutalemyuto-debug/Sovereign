@@ -11,7 +11,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import HabitForm, JournalEntryForm, ProfileForm, SignupForm, TodoForm
-from .models import FocusSession, Habit, HabitLog, JournalEntry, Profile, Todo
+from .gemini import GeminiAssistantError, ask_gemini
+from .models import ChatMessage, Conversation, FocusSession, Habit, HabitLog, JournalEntry, Profile, Todo
 
 
 def signup_view(request):
@@ -92,7 +93,13 @@ def dashboard(request):
             "rows": [
                 {
                     "habit": habit,
-                    "cells": [history_logs.get((habit.id, day), False) for day in week["dates"]],
+                    "cells": [
+                        {
+                            "date": day,
+                            "completed": history_logs.get((habit.id, day), False),
+                        }
+                        for day in week["dates"]
+                    ],
                 }
                 for habit in habits
             ],
@@ -244,3 +251,77 @@ def update_profile(request):
         messages.success(request, "Profile updated.")
         return redirect("dashboard")
     return render(request, "profile_form.html", {"form": form, "profile": profile})
+
+
+@login_required
+@require_POST
+def assistant_chat(request):
+    message = request.POST.get("message", "").strip()
+    if not message or len(message) > 2000:
+        return JsonResponse({"error": "Please enter a message up to 2,000 characters."}, status=400)
+
+    conversation_id = request.POST.get("conversation_id")
+    conversation = Conversation.objects.filter(id=conversation_id, user=request.user).first() if conversation_id else None
+    if conversation is None:
+        conversation = Conversation.objects.create(user=request.user)
+
+    previous_messages = list(conversation.messages.all())
+    user_message = ChatMessage.objects.create(
+        conversation=conversation, role=ChatMessage.Role.USER, content=message
+    )
+    try:
+        result = ask_gemini(request.user, previous_messages, message)
+        action_message = apply_assistant_action(request.user, result.get("action"))
+        reply = result["reply"]
+        if action_message:
+            reply = f"{reply}\n\n{action_message}"
+    except GeminiAssistantError as exc:
+        user_message.delete()
+        return JsonResponse({"error": str(exc)}, status=503)
+
+    ChatMessage.objects.create(
+        conversation=conversation, role=ChatMessage.Role.ASSISTANT, content=reply
+    )
+    return JsonResponse({"conversation_id": conversation.id, "reply": reply})
+
+
+def apply_assistant_action(user, action):
+    if not isinstance(action, dict):
+        return ""
+    action_type = action.get("type")
+    if action_type == "create_todo":
+        title = str(action.get("title", "")).strip()[:180]
+        due_date = action.get("due_date")
+        try:
+            due_date = datetime.strptime(due_date, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return "I did not create the todo because the date was unclear."
+        if title:
+            Todo.objects.create(user=user, title=title, due_date=due_date)
+            return f"Added todo: {title} for {due_date.strftime('%b %d').lstrip('0')}."
+    elif action_type == "create_habit":
+        name = str(action.get("name", "")).strip()[:120]
+        frequency = action.get("frequency", Habit.Frequency.DAILY)
+        if name and frequency in Habit.Frequency.values:
+            try:
+                target_count = max(1, min(int(action.get("target_count", 1)), 20))
+            except (TypeError, ValueError):
+                target_count = 1
+            Habit.objects.create(
+                user=user,
+                name=name,
+                frequency=frequency,
+                target_count=target_count,
+            )
+            return f"Added habit: {name}."
+    elif action_type == "create_journal":
+        title = str(action.get("title", "Reflection")).strip()[:160]
+        body = str(action.get("body", "")).strip()
+        try:
+            mood = max(1, min(int(action.get("mood", 3)), 5))
+        except (TypeError, ValueError):
+            mood = 3
+        if body:
+            JournalEntry.objects.create(user=user, title=title or "Reflection", body=body, mood=mood)
+            return "Saved that reflection to your journal."
+    return ""

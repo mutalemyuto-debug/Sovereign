@@ -37,6 +37,16 @@
     {% for message in messages %}<div class="flash-message">{{ message }}</div>{% endfor %}
     {% block content %}{% endblock %}
 </main>
+{% if user.is_authenticated %}
+<aside class="assistant-widget" data-assistant-widget>
+    <button class="assistant-launcher" type="button" data-assistant-toggle aria-expanded="false" aria-controls="assistant-panel"><span class="assistant-spark">✦</span><span>Sovereign guide</span></button>
+    <section class="assistant-panel" id="assistant-panel" aria-label="Sovereign guide" hidden>
+        <header class="assistant-header"><div><p class="eyebrow accent">YOUR GUIDE</p><h2>Sovereign assistant</h2></div><button class="assistant-close" type="button" data-assistant-toggle aria-label="Close assistant">×</button></header>
+        <div class="assistant-messages" data-assistant-messages><div class="assistant-message assistant-message-bot">I can help you plan a habit, capture a reflection, or turn an intention into a todo.</div></div>
+        <form class="assistant-form" data-assistant-form action="{% url 'assistant_chat' %}" method="post">{% csrf_token %}<textarea name="message" rows="2" maxlength="2000" placeholder="Ask or tell me what you need..." required></textarea><button class="button primary" type="submit">Send <span>↗</span></button></form>
+    </section>
+</aside>
+{% endif %}
 {% block scripts %}{% endblock %}
 <script src="{% static 'js/app.js' %}"></script>
 </body>
