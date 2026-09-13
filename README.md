@@ -50,9 +50,14 @@ DATABASE_URL=your-managed-postgresql-url
 Run migrations as part of every deployment before starting the web process:
 
 ```powershell
-python manage.py migrate
-python manage.py collectstatic --noinput
-gunicorn sovereign.wsgi:application
+python manage.py migrate && python manage.py collectstatic --noinput && gunicorn sovereign.wsgi:application
 ```
+
+For Render, use these settings:
+
+- Build command: `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
+- Start command: `gunicorn sovereign.wsgi:application`
+
+The `collectstatic` step is required so WhiteNoise can serve `static/css/styles.css` and the other files in `static/` in production.
 
 The default SQLite database is intended for local development. Deployment filesystems are commonly replaced during builds or restarts, so use a managed PostgreSQL database for production. Existing SQLite data must be exported and imported into that database; setting `DATABASE_URL` does not automatically copy local records.
